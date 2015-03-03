@@ -1,0 +1,31 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Mar 3, 2015, 2:26:37 PM
+    Author     : hth
+*/
+
+body{
+    background-color: #0F0F0F;
+}
+
+.ui-inputfield {
+    margin: 5px!important;
+}
+
+button {
+    margin-left: 15px;
+}
+
+.container{
+    width: 320px;
+    margin: 0 auto;
+    margin-top: 50px;
+}
+
+.registerButton{
+    margin-left: 25px;
+}

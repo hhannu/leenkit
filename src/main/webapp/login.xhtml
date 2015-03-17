@@ -9,19 +9,25 @@
         <h:outputStylesheet library="css" name="mystyle.css"/>
     </h:head>
     <h:body>
+        <h1 class="heading">#{txt["login_title"]}</h1>
         <div class="container">
-            <h:form>
-                <p:growl id="growl" showDetail="false"/>
-
-                <p:inputText type="text" placeholder="Username" value="#{userManager.username}" validatorMessage="Invalid username">
+            <h:form id="lform">
+                <p:inputText id="uname" type="text" placeholder="#{txt['username']}"
+                             value="#{userManager.username}"
+                             validatorMessage="#{txt['invalid_un']}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]{3,10}+$" />
-                </p:inputText>
+                </p:inputText> 
+                <p:message for="uname"/>
+                
+                <p:inputText id="pw" type="password" placeholder="#{txt['password']}"
+                             value="#{userManager.password1}"/>
+                <p:message for="pw"/>
+                
                 <br/>
-                <p:inputText type="password" placeholder="Password" value="#{userManager.password1}"/>
-                <br/>
-                <br/>
-                <p:commandButton action="#{userManager.login}" value="LogIn" update="growl"/>  
-                <p:button class="registerButton" outcome="register" value="Register"/>   
+                <p:commandButton styleClass="mybutton" action="#{userManager.login}"
+                                 value="#{txt['login']}" update="lform"/>  
+                <p:button styleClass="mybutton" outcome="register"
+                          value="#{txt['register']}"/>   
             </h:form> 
         </div>
     </h:body>

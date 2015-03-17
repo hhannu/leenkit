@@ -9,28 +9,38 @@
         <h:outputStylesheet library="css" name="mystyle.css"/>
     </h:head>
     <h:body>
+        <h1 class="heading">#{txt['reg_title']}</h1>
         <div class="container">
-            <h:form>
-                <p:growl id="growl" showDetail="false"/>
-
-                <p:inputText type="text" placeholder="Username" value="#{userManager.username}" validatorMessage="Invalid username">
+            <h:form id="regform">
+                <p:inputText id="uname" type="text" placeholder="#{txt['username']}"
+                             value="#{userManager.username}"
+                             validatorMessage="#{txt['invalid_un']}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]+$"/>
                     <f:validateLength minimum="3" maximum="10"/>
-                </p:inputText>
-                <br/>
-                <p:inputText type="password" placeholder="Password" value="#{userManager.password1}" validatorMessage="Invalid password">
+                </p:inputText>                
+                <p:message for="uname"/>
+                
+                <p:inputText id="pw1" type="password" placeholder="#{txt['password']}"
+                             value="#{userManager.password1}"
+                             validatorMessage="#{txt['invalid_pw']}">
                     <f:validateLength minimum="6"/>
-                </p:inputText>
-                <br/>
-                <p:inputText type="password" placeholder="Password confirmation" value="#{userManager.password2}" validatorMessage="Invalid password">
+                </p:inputText>     
+                <p:message for="pw1"/>
+                
+                <p:inputText id="pw2" type="password" placeholder="#{txt['pw_confirm']}"
+                             value="#{userManager.password2}"
+                             validatorMessage="#{txt['invalid_pw']}">
                     <f:validateLength minimum="6"/>
-                </p:inputText>
+                </p:inputText>     
+                <p:message for="pw2"/>
+                
+                <p:inputText type="text" placeholder="#{txt['email']}" value="#{userManager.email}"/>
                 <br/>
-                <p:inputText type="text" placeholder="Email Address" value="#{userManager.email}"/>
                 <br/>
-                <br/>
-                <p:button outcome="login" value="Cancel"/>
-                <p:commandButton action="#{userManager.register}" value="Register" update="growl"/>
+                <p:button styleClass="mybutton" outcome="login" value="#{txt['cancel']}"/>
+                <p:commandButton styleClass="mybutton" action="#{userManager.register}"
+                                 value="#{txt['register']}" update="regform"/>
+                
             </h:form>   
         </div>
     </h:body>

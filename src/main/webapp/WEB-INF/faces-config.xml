@@ -27,4 +27,20 @@
             <redirect/>          
         </navigation-case>
     </navigation-rule>
+    
+    <application>   
+        <locale-config>
+            <default-locale>en</default-locale>
+            <supported-locale>fi</supported-locale>
+        </locale-config>
+        <resource-bundle>
+            <base-name>
+                locale
+            </base-name>
+            <var>
+                txt
+            </var>
+        </resource-bundle>
+    </application>
+    
 </faces-config>

@@ -10,22 +10,32 @@ and open the template in the editor.
 
 body{
     background-color: #0F0F0F;
+    color: #EBEBEB!important;
 }
 
 .ui-inputfield {
     margin: 5px!important;
 }
 
-button {
-    margin-left: 15px;
+.mybutton {
+    margin: 10px!important;
+}
+
+.heading{
+    text-align: center;
 }
 
 .container{
-    width: 320px;
+    width: 300px;
     margin: 0 auto;
     margin-top: 50px;
 }
 
-.registerButton{
-    margin-left: 25px;
+#lform{
+    text-align: center;
 }
+
+#regform{
+    text-align: center;
+}
+

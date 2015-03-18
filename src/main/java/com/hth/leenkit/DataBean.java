@@ -8,7 +8,7 @@ package com.hth.leenkit;
 import java.util.ArrayList;
 import java.util.List;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
@@ -17,11 +17,14 @@ import javax.servlet.http.HttpServletRequest;
  * @author hth
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 public class DataBean{
     
     private List tracks;
     private String mapCenter;
+    private String username;
+    private String buttonText;
+    private Boolean disabled;
 
     /**
      * Creates a new instance of DataBean
@@ -37,6 +40,9 @@ public class DataBean{
             mapCenter = "65.0126144,25.4714526";
         else
             mapCenter = request.getParameter("track");
+        username = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("username");
+        disabled = true;
+        buttonText = "Edit";
     }
 
     public List getTracks() {
@@ -58,4 +64,47 @@ public class DataBean{
     public void setTrack() {
         
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    public String getButtonText() {
+        return buttonText;
+    }
+
+    public void setButtonText(String buttonText) {
+        this.buttonText = buttonText;
+    }
+    
+    public void editData() {
+        if(!this.disabled){
+            this.buttonText = "Edit";
+            this.disabled = true;
+        }
+        else {
+            this.buttonText = "Cancel";
+            this.disabled = false;
+        }
+    }
+    
+    public void saveData() {
+        this.buttonText = "Edit";
+        this.disabled = true;
+        
+        //TODO: save data
+    }   
+    
 }

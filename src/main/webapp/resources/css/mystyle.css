@@ -31,6 +31,15 @@ body{
     margin-top: 50px;
 }
 
+#mapcontainer{
+    background-color: lightgray;
+    width: 480px;
+    height: 480px;
+    float: left;
+    margin-left: 5%;
+    margin-top: 10px;
+}
+
 #lform{
     text-align: center;
 }

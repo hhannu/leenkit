@@ -14,20 +14,26 @@
         <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
     </h:head>
 
-    <h:body>            
+    <h:body>      
+        <f:view locale="#{localeBean.locale}"/>
 
         <p:dialog header="Settings" widgetVar="settingsDialog" modal="true" resizable="false">
             <h:form enctype="multipart/form-data">
-
-                <p:outputLabel value="property1" />
+                #{txt.lang}:
+                <h:selectOneMenu value="#{localeBean.localeCode}">
+                    <f:selectItems value="#{localeBean.languages}"/> 
+                </h:selectOneMenu>
                 <br/>
-                <p:outputLabel value="property2" />
+                #{txt.lang}:
+                <h:selectOneMenu value="#{localeBean.unitString}">
+                    <f:selectItems value="#{localeBean.units}"/> 
+                </h:selectOneMenu>
                 <br/>
-                <p:outputLabel value="property3" />
+                <p:outputLabel value="property n" />
                 <br/>
 
                 <p:commandButton value="Cancel"/>
-                <p:commandButton value="Save"/>
+                <p:commandButton value="Save" />
             </h:form>
         </p:dialog> 
 
@@ -59,13 +65,16 @@
                 </div>
             </h:form> 
             
-            <p:dataList var="track" value="#{dataBean.tracks}" style="width:480px; float: left;">
-                <f:facet name="header">Your Tracks</f:facet>  
-                <p:button outcome="content" value="#{track}">
-                    <f:param name="track" value="#{track}"/>
-                </p:button>
-            </p:dataList> 
-            
+            <h:form id="trackform">  
+                <p:dataList var="track" value="#{dataBean.trackList}"
+                            style="width:480px; float: left;">
+                    <f:facet name="header">#{txt.track_header}</f:facet>  
+                    <p:commandButton value="#{track.name}" ajax="false">
+                        <f:setPropertyActionListener value="#{track}"
+                                                     target="#{dataBean.track}"/>
+                    </p:commandButton>
+                </p:dataList> 
+            </h:form>
         </div>
                         <!--<p:gmap center="65.0126144,25.4714526" zoom="11" type="hybrid" style="width:480px; height:480px; float: left;"/>-->
         <div id="mapcontainer">
@@ -79,20 +88,20 @@
                     <div class="ui-grid-col-4">
                         Distance
                         <br/>
-                        <p:inputText value="0.00" disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBean.track.distance}" disabled="#{dataBean.disabled}"
                                                  maxlength="6"/>
                         km
                     </div>
                     <div class="ui-grid-col-4">
                         Duration
                         <br/>
-                        <p:inputText value="00:00:00" disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBean.track.duration}" disabled="#{dataBean.disabled}"
                                                  maxlength="8"/>
                     </div>
                     <div class="ui-grid-col-4">
                         Average Speed
                         <br/>
-                        <p:inputText value="0.00" disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBean.track.avgSpeed}" disabled="#{dataBean.disabled}"
                                                  maxlength="6"/>
                         kmh
                     </div>
@@ -100,7 +109,7 @@
                 <div class="ui-grid-row">Description</div>
                 <div class="ui-grid-row">
                     <div class="ui-grid-col-8">
-                        <p:inputTextarea value="track description ..." disabled="#{dataBean.disabled}"/>
+                        <p:inputTextarea value="#{dataBean.track.description}" disabled="#{dataBean.disabled}"/>
                     </div>
                     <div class="ui-grid-col-4">
                         <p:commandButton value="#{dataBean.buttonText}" actionListener="#{dataBean.editData}"

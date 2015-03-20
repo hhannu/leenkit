@@ -5,6 +5,8 @@
  */
 package com.hth.leenkit;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import java.util.ArrayList;
 import java.util.List;
 import javax.faces.bean.ManagedBean;
@@ -18,22 +20,25 @@ import javax.servlet.http.HttpServletRequest;
  */
 @ManagedBean
 @SessionScoped
-public class DataBean{
+public class DataBean {
     
-    private List tracks;
+    private List trackList;
     private String mapCenter;
     private String username;
     private String buttonText;
     private Boolean disabled;
+    
+    private Database db;
+    private DBObject track;
 
     /**
      * Creates a new instance of DataBean
      */
     public DataBean() {
-        tracks = new ArrayList();
-        tracks.add("65.0126144,25.4714526");
-        tracks.add("61.4981508,23.7610254");
-        tracks.add("66.4970212,25.724999");
+        trackList = new ArrayList();
+        track = new BasicDBObject("duration", "00:00:00")
+        .append("distance", "0.00")
+        .append("avgSpeed", "0.00");
         
         HttpServletRequest request = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();        
         if(request.getParameter("track") == null)
@@ -45,12 +50,26 @@ public class DataBean{
         buttonText = "Edit";
     }
 
-    public List getTracks() {
-        return tracks;
+    public DBObject getTrack() {
+        return track;
     }
 
-    public void setTracks(List tracks) {
-        this.tracks = tracks;
+    public void setTrack(DBObject track) {
+        this.track = track;
+    }
+
+    public List getTrackList() {
+        trackList.clear();
+        db = new Database("lenkit");
+//        List<DBObject> tracklist = db.getTracks(username);
+//        for (DBObject obj : tracklist) {
+//            trackList.add((String)obj.get("name"));
+//        }
+        return db.getTracks(username); //tracks;
+    }
+
+    public void setTrackList(List tracks) {
+        this.trackList = tracks;
     }
 
     public String getMapCenter() {

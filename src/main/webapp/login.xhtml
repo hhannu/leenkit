@@ -8,27 +8,40 @@
         <title>lEEnkit</title>
         <h:outputStylesheet library="css" name="mystyle.css"/>
     </h:head>
-    <h:body>
-        <h1 class="heading">#{txt["login_title"]}</h1>
+    <h:body>        
+        <f:view locale="#{localeBean.locale}"/>
+        
+        <h:form style="float: right;"> 
+            <h:selectOneMenu value="#{localeBean.localeCode}" onchange="submit()"
+                             valueChangeListener="#{localeBean.localeCodeChanged}">
+                <f:selectItems value="#{localeBean.languages}"/> 
+            </h:selectOneMenu>
+        </h:form> 
+        <br/>
+        <h1 class="heading">#{txt.login_title}</h1>
+        
         <div class="container">
             <h:form id="lform">
-                <p:inputText id="uname" type="text" placeholder="#{txt['username']}"
+                <p:inputText id="uname" type="text" placeholder="#{txt.username}"
                              value="#{userManager.username}"
-                             validatorMessage="#{txt['invalid_un']}">
+                             validatorMessage="#{txt.invalid_un}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]{3,10}+$" />
                 </p:inputText> 
                 <p:message for="uname"/>
                 
-                <p:inputText id="pw" type="password" placeholder="#{txt['password']}"
+                <p:inputText id="pw" type="password" placeholder="#{txt.password}"
                              value="#{userManager.password1}"/>
                 <p:message for="pw"/>
                 
                 <br/>
                 <p:commandButton styleClass="mybutton" action="#{userManager.login}"
-                                 value="#{txt['login']}" update="lform"/>  
+                                 value="#{txt.login}" update="lform"/>  
                 <p:button styleClass="mybutton" outcome="register"
-                          value="#{txt['register']}"/>   
-            </h:form> 
+                          value="#{txt.register}"/>
+                
+                <br/>
+                <br/>
+            </h:form>
         </div>
     </h:body>
 </html>

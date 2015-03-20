@@ -9,37 +9,48 @@
         <h:outputStylesheet library="css" name="mystyle.css"/>
     </h:head>
     <h:body>
-        <h1 class="heading">#{txt['reg_title']}</h1>
+        <f:view locale="#{localeBean.locale}"/>
+        
+        <h:form style="float: right;"> 
+            <h:selectOneMenu value="#{localeBean.localeCode}" onchange="submit()"
+                             valueChangeListener="#{localeBean.localeCodeChanged}">
+                <f:selectItems value="#{localeBean.languages}"/> 
+            </h:selectOneMenu>
+        </h:form> 
+        <br/>
+        
+        <h1 class="heading">#{txt.reg_title}</h1>
+        
         <div class="container">
             <h:form id="regform">
-                <p:inputText id="uname" type="text" placeholder="#{txt['username']}"
+                <p:inputText id="uname" type="text" placeholder="#{txt.username}"
                              value="#{userManager.username}"
-                             validatorMessage="#{txt['invalid_un']}">
+                             validatorMessage="#{txt.invalid_un}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]+$"/>
                     <f:validateLength minimum="3" maximum="10"/>
                 </p:inputText>                
                 <p:message for="uname"/>
                 
-                <p:inputText id="pw1" type="password" placeholder="#{txt['password']}"
-                             value="#{userManager.password1}"
-                             validatorMessage="#{txt['invalid_pw']}">
+                <p:password id="pw1" label="#{txt.password}" placeholder="#{txt.password}"
+                            value="#{userManager.password1}" match="pw2"
+                            feedback="true" inline="true" required="true">
                     <f:validateLength minimum="6"/>
-                </p:inputText>     
+                </p:password>     
                 <p:message for="pw1"/>
                 
-                <p:inputText id="pw2" type="password" placeholder="#{txt['pw_confirm']}"
-                             value="#{userManager.password2}"
-                             validatorMessage="#{txt['invalid_pw']}">
+                <p:password id="pw2" label="#{txt.pw_confirm}" placeholder="#{txt.pw_confirm}"
+                            value="#{userManager.password2}"
+                            feedback="true" inline="true" required="true">
                     <f:validateLength minimum="6"/>
-                </p:inputText>     
+                </p:password>     
                 <p:message for="pw2"/>
                 
-                <p:inputText type="text" placeholder="#{txt['email']}" value="#{userManager.email}"/>
+                <p:inputText type="text" placeholder="#{txt.email}" value="#{userManager.email}"/>
                 <br/>
                 <br/>
-                <p:button styleClass="mybutton" outcome="login" value="#{txt['cancel']}"/>
+                <p:button styleClass="mybutton" outcome="login" value="#{txt.cancel}"/>
                 <p:commandButton styleClass="mybutton" action="#{userManager.register}"
-                                 value="#{txt['register']}" update="regform"/>
+                                 value="#{txt.register}" update="regform"/>
                 
             </h:form>   
         </div>

@@ -13,6 +13,11 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import org.primefaces.model.map.DefaultMapModel;
+import org.primefaces.model.map.LatLng;
+import org.primefaces.model.map.MapModel;
+import org.primefaces.model.map.Marker;
+import org.primefaces.model.map.Polyline;
 
 /**
  *
@@ -29,8 +34,13 @@ public class DataBean {
     private Boolean disabled;
     
     private Database db;
-    private DBObject track;
-
+    private BasicDBObject track, tmpTrack;
+    
+    private MapModel polylineModel;
+        
+    private Polyline polyline;
+    
+        
     /**
      * Creates a new instance of DataBean
      */
@@ -41,21 +51,46 @@ public class DataBean {
         .append("avgSpeed", "0.00");
         
         HttpServletRequest request = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();        
-        if(request.getParameter("track") == null)
+        //if(request.getParameter("track") == null)
             mapCenter = "65.0126144,25.4714526";
-        else
-            mapCenter = request.getParameter("track");
+        //else
+        //    mapCenter = request.getParameter("track");
+        
+        polyline = new Polyline();
+        polyline.setStrokeWeight(2);
+        polyline.setStrokeColor("#FF0000");
+        polyline.setStrokeOpacity(1.0);
+
+        polylineModel = new DefaultMapModel();        
+        polylineModel.addOverlay(polyline);
+        
         username = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("username");
         disabled = true;
         buttonText = "Edit";
+    }
+
+    public MapModel getPolylineModel() {
+        return polylineModel;
     }
 
     public DBObject getTrack() {
         return track;
     }
 
-    public void setTrack(DBObject track) {
+    public void setTrack(BasicDBObject track) {
         this.track = track;
+        List<LatLng> path = new ArrayList();
+        List<BasicDBObject> points = (List<BasicDBObject>) track.get("trackPoints");
+        for (BasicDBObject obj : points){
+            path.add(new LatLng(Double.parseDouble((String) obj.get("lat")),
+                    Double.parseDouble((String) obj.get("lon"))));
+        }
+        polyline.setPaths(path);
+        
+        polylineModel = new DefaultMapModel();        
+        polylineModel.addOverlay(polyline);
+        polylineModel.addOverlay(new Marker(path.get(0), "Start"));
+        polylineModel.addOverlay(new Marker(path.get(path.size() - 1), "Stop"));
     }
 
     public List getTrackList() {
@@ -78,10 +113,6 @@ public class DataBean {
 
     public void setMapCenter(String mapCenter) {
         this.mapCenter = mapCenter;
-    }
-    
-    public void setTrack() {
-        
     }
 
     public String getUsername() {
@@ -109,11 +140,14 @@ public class DataBean {
     }
     
     public void editData() {
+                
         if(!this.disabled){
+            track = tmpTrack;
             this.buttonText = "Edit";
             this.disabled = true;
         }
         else {
+            tmpTrack = (BasicDBObject) track.copy();
             this.buttonText = "Cancel";
             this.disabled = false;
         }
@@ -123,7 +157,8 @@ public class DataBean {
         this.buttonText = "Edit";
         this.disabled = true;
         
-        //TODO: save data
+        db.saveTrack(track);
+        
     }   
     
 }

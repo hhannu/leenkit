@@ -66,6 +66,10 @@ public class Database {
         tracks.insert(track);
     }
     
+    public void saveTrack(BasicDBObject track) {
+        tracks.save(track);
+    }
+    
     public List<DBObject> getTracks(String username) {
         return tracks.find(new BasicDBObject("owner", username)).toArray();
     }    

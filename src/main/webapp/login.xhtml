@@ -33,9 +33,11 @@
                              value="#{userManager.password1}"/>
                 <p:message for="pw"/>
                 
+                <p:messages id="errormsg" showDetail="true"/>
+                
                 <br/>
                 <p:commandButton styleClass="mybutton" action="#{userManager.login}"
-                                 value="#{txt.login}" update="lform"/>  
+                                 value="#{txt.login}" update="errormsg"/>  
                 <p:button styleClass="mybutton" outcome="register"
                           value="#{txt.register}"/>
                 

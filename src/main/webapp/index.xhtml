@@ -11,13 +11,17 @@
             <title>lEEnkit</title>
             <h:outputStylesheet library="css" name="mystyle.css"/>
         </f:facet>
-        <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+        <script src="http://maps.google.com/maps/api/js?sensor=false"
+                type="text/javascript">                    
+        </script>
     </h:head>
 
     <h:body>      
         <f:view locale="#{localeBean.locale}"/>
 
-        <p:dialog header="Settings" widgetVar="settingsDialog" modal="true" resizable="false">
+        <p:dialog header="Settings" widgetVar="settingsDialog"
+                  modal="true" resizable="false"
+                  showEffect="fade" hideEffect="fade">
             <h:form enctype="multipart/form-data">
                 #{txt.lang}:
                 <h:selectOneMenu value="#{localeBean.localeCode}">
@@ -32,17 +36,25 @@
                 <p:outputLabel value="property n" />
                 <br/>
 
-                <p:commandButton value="Cancel"/>
-                <p:commandButton value="Save" />
+                <p:commandButton value="Cancel" onclick="PF('settingsDialog').hide()"/>
+                <p:commandButton value="Save" ajax="false"
+                                 actionListener="#{dataBean.applySettings}"/>
             </h:form>
         </p:dialog> 
 
-        <p:dialog header="Upload new Track" widgetVar="uploadDialog" modal="true" resizable="false">
+        <p:dialog header="Upload new Track" widgetVar="uploadDialog"
+                  modal="true" resizable="false"                  
+                  showEffect="fade" hideEffect="fade">
             <h:form enctype="multipart/form-data">
-                <p:inputTextarea rows="4" cols="35" title="Track description" placeholder="Track description"/>
+                <p:inputTextarea rows="4" cols="35" title="Track description"
+                                 placeholder="Track description"
+                                 value="#{dataBean.description}"/>
                 <br/>
-                <p:fileUpload mode="simple"/>
-                <p:commandButton value="Upload"/>
+                <p:fileUpload mode="simple" value="#{dataBean.gpxFile}"/>
+                <p:commandButton value="Cancel" onclick="PF('uploadDialog').hide()"/>
+                <p:commandButton value="Upload" ajax="false"
+                                 actionListener="#{dataBean.uploadFile}"/>
+                <p:growl id="uploadmsg" showDetail="true" />
             </h:form>
         </p:dialog> 
 
@@ -66,7 +78,7 @@
             </h:form> 
             
             <h:form id="trackform">  
-                <p:dataList var="track" value="#{dataBean.trackList}"
+                <p:dataList var="track" value="#{dataBean.trackList}" type="definition"
                             style="width:480px; float: left;">
                     <f:facet name="header">#{txt.track_header}</f:facet>  
                     <p:commandButton value="#{track.name}" ajax="false">
@@ -76,90 +88,60 @@
                 </p:dataList> 
             </h:form>
         </div>
-                        <!--<p:gmap center="65.0126144,25.4714526" zoom="11" type="hybrid" style="width:480px; height:480px; float: left;"/>-->
+        
         <div id="mapcontainer">
             <p:gmap id="gmap" center="#{dataBean.mapCenter}" zoom="11" type="hybrid"
                     model="#{dataBean.polylineModel}"
                     style="width:480px; height:480px; float: left;"/>
         </div>
 
-        <h:form id="dform">                    
-            <div class="ui-grid ui-grid-responsive" style="width: 90%; margin-left: 5%; margin-top: 25px; float: left;" >
+        <h:form id="dform">   
+            <p:panel header="Track information" 
+                     style="width: 90%; margin-left: 5%; margin-top: 25px; float: left;">
+            <div class="ui-grid ui-grid-responsive" >
                 <div class="ui-grid-row" >
                     <div class="ui-grid-col-4">
                         Distance
                         <br/>
-                        <p:inputText value="#{dataBean.track.distance}" disabled="#{dataBean.disabled}"
-                                                 maxlength="6"/>
+                        <p:inputText value="#{dataBean.track.distance}"
+                                     disabled="#{dataBean.disabled}"
+                                     size="7" maxlength="6"/>
                         km
                     </div>
                     <div class="ui-grid-col-4">
                         Duration
                         <br/>
-                        <p:inputText value="#{dataBean.track.duration}" disabled="#{dataBean.disabled}"
-                                                 maxlength="8"/>
+                        <p:inputText value="#{dataBean.track.duration}"
+                                     disabled="#{dataBean.disabled}"
+                                     size="9" maxlength="8"/>
                     </div>
                     <div class="ui-grid-col-4">
                         Average Speed
                         <br/>
-                        <p:inputText value="#{dataBean.track.avgSpeed}" disabled="#{dataBean.disabled}"
-                                                 maxlength="6"/>
+                        <p:inputText value="#{dataBean.track.avgSpeed}"
+                                     disabled="#{dataBean.disabled}"
+                                     size="7" maxlength="6"/>
                         kmh
                     </div>
                 </div>
                 <div class="ui-grid-row">Description</div>
                 <div class="ui-grid-row">
                     <div class="ui-grid-col-8">
-                        <p:inputTextarea value="#{dataBean.track.description}" disabled="#{dataBean.disabled}"/>
+                        <p:inputText value="#{dataBean.track.description}"
+                                     disabled="#{dataBean.disabled}"
+                                     size="40" maxlength="200"/>
                     </div>
                     <div class="ui-grid-col-4">
-                        <p:commandButton value="#{dataBean.buttonText}" actionListener="#{dataBean.editData}"
+                        <p:commandButton value="#{dataBean.buttonText}"
+                                         actionListener="#{dataBean.editData}"
                                          update="dform"/>
                         <p:commandButton value="Save" actionListener="#{dataBean.saveData}"
                                          update="dform" rendered="#{!dataBean.disabled}"/>
                     </div>
                 </div>
             </div> 
+            </p:panel>
         </h:form> 
-                            
-<!--        <div style="width: 90%; margin-left: 5%; margin-top: 25px; float: left;" >
-            <p:panelGrid style="width: 100%;">
-                <f:facet name="header">
-                    <p:row>
-                        <p:column>Distance</p:column>
-                        <p:column>Duration</p:column>
-                        <p:column>Average Speed</p:column>
-                    </p:row>
-                </f:facet>     
-
-                <p:row>
-                    <p:column style="text-align: center">
-                        <p:inputText value="0.00" disabled="#{dataBean.disabled}"
-                                     maxlength="6"/>
-                        km
-                    </p:column>
-                    <p:column style="text-align: center">
-                        <p:inputText value="00:00:00" disabled="#{dataBean.disabled}"
-                                     maxlength="8"/>
-                    </p:column>
-                    <p:column style="text-align: center">
-                        <p:inputText value="0.00" disabled="#{dataBean.disabled}"
-                                     maxlength="6"/>
-                        kmh
-                    </p:column>
-                </p:row>
-
-                <p:row>
-                    <p:column colspan="3" styleClass="ui-widget-header">Description</p:column>
-                </p:row>
-
-                <p:row>
-                    <p:column colspan="2">
-                        <p:inputTextarea value="track description ..." disabled="#{dataBean.disabled}"/>
-                    </p:column>
-                </p:row>
-            </p:panelGrid>
-        </div>-->
         <p:separator />
     </h:body>
 </html>

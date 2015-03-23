@@ -35,6 +35,7 @@ public class UserManager {
     private Database db;
     
     public UserManager() {
+        db = new Database("lenkit");
     }
 
     public String getUsername() {
@@ -69,9 +70,7 @@ public class UserManager {
         this.email = email;
     }
     
-    public String login() {
-        
-        db = new Database("lenkit");
+    public String login() {        
         
         boolean result = checkCredentials(username, password1);
         FacesContext context = FacesContext.getCurrentInstance(); 
@@ -83,14 +82,13 @@ public class UserManager {
         }
         else {        
             System.out.println("Wrong username and/or password");
-            context.addMessage(null, new FacesMessage("Error",  "Wrong username or password"));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",  "Wrong username or password"));
             return null;
         }
     }
     
     public String register() {
         
-        db = new Database("lenkit");
         FacesContext context = FacesContext.getCurrentInstance();
         
         if(!db.hasUser(username)){     
@@ -99,6 +97,8 @@ public class UserManager {
                     BCrypt.hashpw(password1, BCrypt.gensalt(8))).append("email", email);
             db.addUser(tmp);
             context.getExternalContext().getSessionMap().put("username", username);
+            
+            //db.close();
             return "content";
         }
         else {        
@@ -120,31 +120,17 @@ public class UserManager {
     }
     
     private boolean checkCredentials(String username, String password) {
-        /*
-        try {
-            mc = new MongoClient("localhost", 27017);
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(UserManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
         
-        System.out.println("Connected to DB");
-        db = mc.getDB("lenkit");
-        users = db.getCollection("users");
-        
-        BasicDBObject tmp = new BasicDBObject("username", username);
-        user = users.findOne(tmp);
-        mc.close();
-        */
         user = db.getUser(username);
-        
-        System.out.println("Found user: " + user.toString());
         
         if(user == null)
             return false;
         
-        System.out.println((String) user.get("password"));
-        return(BCrypt.checkpw(password, (String) user.get("password")));
+        // TODO: remove this
+        else
+            return true;
         
-        //return (username.equals("user") && password.equals("pw"));
+        //System.out.println((String) user.get("password"));
+        //return(BCrypt.checkpw(password, (String) user.get("password")));
     }
 }

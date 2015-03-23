@@ -7,17 +7,29 @@ package com.hth.leenkit;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.primefaces.model.UploadedFile;
 import org.primefaces.model.map.DefaultMapModel;
 import org.primefaces.model.map.LatLng;
 import org.primefaces.model.map.MapModel;
 import org.primefaces.model.map.Marker;
 import org.primefaces.model.map.Polyline;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -31,6 +43,7 @@ public class DataBean {
     private String mapCenter;
     private String username;
     private String buttonText;
+    private String description;    
     private Boolean disabled;
     
     private Database db;
@@ -40,15 +53,16 @@ public class DataBean {
         
     private Polyline polyline;
     
+    private UploadedFile gpxFile;
+    
         
     /**
      * Creates a new instance of DataBean
      */
-    public DataBean() {
-        trackList = new ArrayList();
-        track = new BasicDBObject("duration", "00:00:00")
-        .append("distance", "0.00")
-        .append("avgSpeed", "0.00");
+    public DataBean() {        
+        db = new Database("leenkit");
+        
+        track = null;
         
         HttpServletRequest request = (HttpServletRequest)FacesContext.getCurrentInstance().getExternalContext().getRequest();        
         //if(request.getParameter("track") == null)
@@ -67,6 +81,9 @@ public class DataBean {
         username = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("username");
         disabled = true;
         buttonText = "Edit";
+        
+        updateTrackList();
+        
     }
 
     public MapModel getPolylineModel() {
@@ -81,7 +98,7 @@ public class DataBean {
         this.track = track;
         List<LatLng> path = new ArrayList();
         List<BasicDBObject> points = (List<BasicDBObject>) track.get("trackPoints");
-        for (BasicDBObject obj : points){
+        for(BasicDBObject obj : points){
             path.add(new LatLng(Double.parseDouble((String) obj.get("lat")),
                     Double.parseDouble((String) obj.get("lon"))));
         }
@@ -94,13 +111,13 @@ public class DataBean {
     }
 
     public List getTrackList() {
-        trackList.clear();
-        db = new Database("lenkit");
+        //trackList.clear();
 //        List<DBObject> tracklist = db.getTracks(username);
 //        for (DBObject obj : tracklist) {
 //            trackList.add((String)obj.get("name"));
 //        }
-        return db.getTracks(username); //tracks;
+        //return db.getTracks(username); //tracks;
+        return trackList;
     }
 
     public void setTrackList(List tracks) {
@@ -123,6 +140,14 @@ public class DataBean {
         this.username = username;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public Boolean getDisabled() {
         return disabled;
     }
@@ -138,9 +163,20 @@ public class DataBean {
     public void setButtonText(String buttonText) {
         this.buttonText = buttonText;
     }
+
+    public UploadedFile getGpxFile() {
+        return gpxFile;
+    }
+
+    public void setGpxFile(UploadedFile gpxFile) {
+        this.gpxFile = gpxFile;
+    }
     
     public void editData() {
-                
+         
+        if(track == null)
+            return;
+        
         if(!this.disabled){
             track = tmpTrack;
             this.buttonText = "Edit";
@@ -157,8 +193,85 @@ public class DataBean {
         this.buttonText = "Edit";
         this.disabled = true;
         
-        db.saveTrack(track);
+        if(track != null) {
+            db.saveTrack(track);
+            updateTrackList();
+        }
         
     }   
     
+    public void uploadFile() {
+        if(gpxFile != null) {
+            
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder;
+            Document doc;
+            
+            try {
+                dBuilder = dbFactory.newDocumentBuilder();
+                doc = dBuilder.parse(gpxFile.getInputstream());
+            } catch (ParserConfigurationException | IOException | SAXException ex) {
+                Logger.getLogger(DataBean.class.getName()).log(Level.SEVERE, null, ex);
+                FacesMessage message = new FacesMessage("Error", ex.getLocalizedMessage());
+                FacesContext.getCurrentInstance().addMessage(null, message);
+                return;
+            }
+            doc.getDocumentElement().normalize();
+            
+            NodeList trackpoints = doc.getElementsByTagName("trkpt");
+            List<BasicDBObject> points = new ArrayList();
+            
+            for(int i = 0; i < trackpoints.getLength(); i++) {
+                Node point = trackpoints.item(i);
+                BasicDBObject trkpt =  new BasicDBObject();
+                // get latitude & longitude
+                trkpt.append("lat", point.getAttributes().getNamedItem("lat").getNodeValue());
+                trkpt.append("lon", point.getAttributes().getNamedItem("lon").getNodeValue());
+                
+                // get other parameters
+                NodeList nlist = point.getChildNodes();
+                for(int j = 0; j < nlist.getLength(); j++) {
+                    String nodeName = nlist.item(j).getNodeName();
+                    // add only elevation and time
+                    if(nodeName.equals("ele") || nodeName.equals("time"))
+                        trkpt.append(nlist.item(j).getNodeName(), nlist.item(j).getTextContent());                    
+                }
+                points.add(trkpt);
+            }
+            
+            // Create new track object
+            BasicDBObject newTrack = new BasicDBObject();
+            newTrack.append("owner", username);
+            //newTrack.append("description", description);
+            String name = doc.getElementsByTagName("name").item(0).getNodeValue();
+            if(name == null)
+                name = points.get(0).getString("time");
+            newTrack.append("name", doc.getElementsByTagName("name").item(0).getTextContent());
+            
+            newTrack.append("trackPoints", points);
+            
+            db.saveTrack(newTrack);
+            updateTrackList();
+            
+            FacesMessage message = new FacesMessage("Success", "Uploaded file: " + gpxFile.getFileName());
+            FacesContext.getCurrentInstance().addMessage(null, message);
+            
+            System.out.println("Uploaded file: " + gpxFile.getFileName() + 
+                               " (" + gpxFile.getContentType() + ")");
+            System.out.println("Description: " + description);            
+            System.out.println(newTrack + "\n");
+            
+            gpxFile = null;
+            description = "";
+        }
+        
+    }
+    
+    public void applySettings() {
+    
+    }
+      
+    private void updateTrackList() {        
+        trackList = db.getTracks(username);
+    }
 }

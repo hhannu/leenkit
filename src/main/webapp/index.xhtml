@@ -38,7 +38,7 @@
 
                 <p:commandButton value="Cancel" onclick="PF('settingsDialog').hide()"/>
                 <p:commandButton value="Save" ajax="false"
-                                 actionListener="#{dataBean.applySettings}"/>
+                                 actionListener="#{dataBaseBean.applySettings}"/>
             </h:form>
         </p:dialog> 
 
@@ -48,12 +48,12 @@
             <h:form enctype="multipart/form-data">
                 <p:inputTextarea rows="4" cols="35" title="Track description"
                                  placeholder="Track description"
-                                 value="#{dataBean.description}"/>
+                                 value="#{dataBaseBean.description}"/>
                 <br/>
-                <p:fileUpload mode="simple" value="#{dataBean.gpxFile}"/>
+                <p:fileUpload mode="simple" value="#{dataBaseBean.gpxFile}"/>
                 <p:commandButton value="Cancel" onclick="PF('uploadDialog').hide()"/>
                 <p:commandButton value="Upload" ajax="false"
-                                 actionListener="#{dataBean.uploadFile}"/>
+                                 actionListener="#{dataBaseBean.uploadFile}"/>
                 <p:growl id="uploadmsg" showDetail="true" />
             </h:form>
         </p:dialog> 
@@ -62,14 +62,14 @@
         <div style="width: 480px; height: 480px; float: left; margin-left: 5%;">
             <h:form style="width: 100%; padding: 10px;">
 
-                <p:menuButton value="#{dataBean.username}">
+                <p:menuButton value="#{dataBaseBean.user.username}">
                     <p:menuitem value="Add new Track" icon="ui-icon-plusthick"
                                 onclick="PF('uploadDialog').show();"/>
                     <p:menuitem value="Settings" icon="ui-icon-wrench"
                                 onclick="PF('settingsDialog').show();" />
                     <p:separator />
                     <p:menuitem value="Log Out" icon="ui-icon-extlink"
-                                action="#{userManager.logout}" />
+                                action="#{dataBaseBean.logout}" />
                 </p:menuButton> 
 
                 <div style="float: right; margin: 10px;">
@@ -78,20 +78,20 @@
             </h:form> 
             
             <h:form id="trackform">  
-                <p:dataList var="track" value="#{dataBean.trackList}" type="definition"
+                <p:dataList var="trk" value="#{dataBaseBean.tracklist}" type="definition"
                             style="width:480px; float: left;">
                     <f:facet name="header">#{txt.track_header}</f:facet>  
-                    <p:commandButton value="#{track.name}" ajax="false">
-                        <f:setPropertyActionListener value="#{track}"
-                                                     target="#{dataBean.track}"/>
+                    <p:commandButton value="#{trk.name}" ajax="false">
+                        <f:setPropertyActionListener value="#{trk}"
+                                                     target="#{dataBaseBean.track}"/>
                     </p:commandButton>
                 </p:dataList> 
             </h:form>
         </div>
         
         <div id="mapcontainer">
-            <p:gmap id="gmap" center="#{dataBean.mapCenter}" zoom="11" type="hybrid"
-                    model="#{dataBean.polylineModel}"
+            <p:gmap id="gmap" center="#{dataBaseBean.mapCenter}" zoom="11" type="hybrid"
+                    model="#{dataBaseBean.polylineModel}"
                     style="width:480px; height:480px; float: left;"/>
         </div>
 
@@ -103,23 +103,23 @@
                     <div class="ui-grid-col-4">
                         Distance
                         <br/>
-                        <p:inputText value="#{dataBean.track.distance}"
-                                     disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBaseBean.track.distance}"
+                                     disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6"/>
                         km
                     </div>
                     <div class="ui-grid-col-4">
                         Duration
                         <br/>
-                        <p:inputText value="#{dataBean.track.duration}"
-                                     disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBaseBean.track.duration}"
+                                     disabled="#{dataBaseBean.disabled}"
                                      size="9" maxlength="8"/>
                     </div>
                     <div class="ui-grid-col-4">
                         Average Speed
                         <br/>
-                        <p:inputText value="#{dataBean.track.avgSpeed}"
-                                     disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBaseBean.track.avgspeed}"
+                                     disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6"/>
                         kmh
                     </div>
@@ -127,22 +127,31 @@
                 <div class="ui-grid-row">Description</div>
                 <div class="ui-grid-row">
                     <div class="ui-grid-col-8">
-                        <p:inputText value="#{dataBean.track.description}"
-                                     disabled="#{dataBean.disabled}"
+                        <p:inputText value="#{dataBaseBean.track.description}"
+                                     disabled="#{dataBaseBean.disabled}"
                                      size="40" maxlength="200"/>
                     </div>
                     <div class="ui-grid-col-4">
-                        <p:commandButton value="#{dataBean.buttonText}"
-                                         actionListener="#{dataBean.editData}"
+                        <p:commandButton value="#{dataBaseBean.buttonText}"
+                                         actionListener="#{dataBaseBean.editData}"
                                          update="dform"/>
-                        <p:commandButton value="Save" actionListener="#{dataBean.saveData}"
-                                         update="dform" rendered="#{!dataBean.disabled}"/>
+                        <p:commandButton value="Save" actionListener="#{dataBaseBean.saveData}"
+                                         update="dform" rendered="#{!dataBaseBean.disabled}"/>
+                        <p:commandButton value="Delete" actionListener="#{dataBaseBean.deleteTrack}"
+                                         update="dform,:gmap,:trackform" rendered="#{!dataBaseBean.disabled}">
+                            <p:confirm header="Confirmation" message="Delete track #{dataBaseBean.track.name} ?" icon="ui-icon-alert" />
+                        </p:commandButton>
+                        <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                        </p:confirmDialog>
+                        
                     </div>
                 </div>
             </div> 
             </p:panel>
         </h:form> 
-        <p:separator />
+        <p:separator/>
     </h:body>
 </html>
 

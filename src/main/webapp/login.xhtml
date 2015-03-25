@@ -23,20 +23,20 @@
         <div class="container">
             <h:form id="lform">
                 <p:inputText id="uname" type="text" placeholder="#{txt.username}"
-                             value="#{userManager.username}"
+                             value="#{dataBaseBean.user.username}"
                              validatorMessage="#{txt.invalid_un}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]{3,10}+$" />
                 </p:inputText> 
                 <p:message for="uname"/>
                 
                 <p:inputText id="pw" type="password" placeholder="#{txt.password}"
-                             value="#{userManager.password1}"/>
+                             value="#{dataBaseBean.user.password}"/>
                 <p:message for="pw"/>
                 
                 <p:messages id="errormsg" showDetail="true"/>
                 
                 <br/>
-                <p:commandButton styleClass="mybutton" action="#{userManager.login}"
+                <p:commandButton styleClass="mybutton" action="#{dataBaseBean.login}"
                                  value="#{txt.login}" update="errormsg"/>  
                 <p:button styleClass="mybutton" outcome="register"
                           value="#{txt.register}"/>

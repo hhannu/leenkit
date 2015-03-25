@@ -24,7 +24,7 @@
         <div class="container">
             <h:form id="regform">
                 <p:inputText id="uname" type="text" placeholder="#{txt.username}"
-                             value="#{userManager.username}"
+                             value="#{dataBaseBean.user.username}"
                              validatorMessage="#{txt.invalid_un}">
                     <f:validateRegex pattern="^[a-zA-Z0-9_]+$"/>
                     <f:validateLength minimum="3" maximum="10"/>
@@ -32,26 +32,25 @@
                 <p:message for="uname"/>
                 
                 <p:password id="pw1" label="#{txt.password}" placeholder="#{txt.password}"
-                            value="#{userManager.password1}" match="pw2"
+                            value="#{dataBaseBean.user.password}" match="pw2"
                             feedback="true" inline="true" required="true">
                     <f:validateLength minimum="6"/>
                 </p:password>     
                 <p:message for="pw1"/>
                 
                 <p:password id="pw2" label="#{txt.pw_confirm}" placeholder="#{txt.pw_confirm}"
-                            value="#{userManager.password2}"
                             feedback="true" inline="true" required="true">
                     <f:validateLength minimum="6"/>
                 </p:password>     
                 <p:message for="pw2"/>
                 
-                <p:inputText type="text" placeholder="#{txt.email}" value="#{userManager.email}"/>
-                <br/>
+                <p:inputText type="text" placeholder="#{txt.email}" value="#{dataBaseBean.user.email}"/>
+                <br/>                
+                <p:messages id="errormsg" showDetail="true"/>                
                 <br/>
                 <p:button styleClass="mybutton" outcome="login" value="#{txt.cancel}"/>
-                <p:commandButton styleClass="mybutton" action="#{userManager.register}"
-                                 value="#{txt.register}" update="regform"/>
-                
+                <p:commandButton styleClass="mybutton" action="#{dataBaseBean.register}"
+                                 value="#{txt.register}" update="regform"/>                
             </h:form>   
         </div>
     </h:body>

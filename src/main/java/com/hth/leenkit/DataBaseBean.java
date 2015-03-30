@@ -11,9 +11,12 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,8 +66,18 @@ public class DataBaseBean {
     public DataBaseBean() {
         MongoClient mc = null;
         
+        String mongo_un = System.getenv("OPENSHIFT_MONGODB_DB_USERNAME");
+        String mongo_pw = System.getenv("OPENSHIFT_MONGODB_DB_PASSWORD");
+        String mongo_host = System.getenv("OPENSHIFT_MONGODB_DB_HOST");
+        String mongo_port = System.getenv("OPENSHIFT_MONGODB_DB_PORT");
+        
         try {
-            mc = new MongoClient("localhost", 27017);
+            if(mongo_pw != null){    
+                MongoCredential credential = MongoCredential.createMongoCRCredential(mongo_un, "leenkit", mongo_pw.toCharArray());
+                mc = new MongoClient(new ServerAddress(mongo_host, Integer.parseInt(mongo_port)), Arrays.asList(credential));
+            }
+            else
+                mc = new MongoClient("localhost", 27017);
         } catch (UnknownHostException ex) {
             Logger.getLogger(DataBaseBean.class.getName()).log(Level.SEVERE, null, ex);
         }

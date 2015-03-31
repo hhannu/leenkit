@@ -28,6 +28,7 @@ public class LocaleBean {
     private static Map<String,Object> languages;
     private static List<String> units;
     private String unitString;
+    private Boolean metric;
     
     /**
      * Creates a new instance of LocaleBean
@@ -39,6 +40,7 @@ public class LocaleBean {
         languages.put("English", Locale.ENGLISH);
 	languages.put("Finnish", new Locale("fi"));
         units = Arrays.asList("Metric", "Imperial");
+        metric = true;
     }
 
     public Locale getLocale() {
@@ -73,6 +75,14 @@ public class LocaleBean {
     public void setUnitString(String unit) {
         this.unitString = unit;
     }
+
+    public Boolean getMetric() {
+        return metric;
+    }
+
+    public void setMetric(Boolean metric) {
+        this.metric = metric;
+    }
 	
     public void localeCodeChanged(ValueChangeEvent e){
  
@@ -84,6 +94,22 @@ public class LocaleBean {
                 FacesContext.getCurrentInstance().getViewRoot().setLocale((Locale)entry.getValue());
             }
         }
+    }
+    
+    public void unitCodeChanged(ValueChangeEvent e){
+ 
+        if(e.getNewValue().toString().equals("Metric")) {
+            metric = true;
+        }
+        else {
+            metric = false;
+        }
+    }
+        
+    public String getDistanceUnit() {
+        if(metric)
+            return "km";
+        return "miles";
     }
     
 }

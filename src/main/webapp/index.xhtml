@@ -8,7 +8,7 @@
     <h:head>
         <f:facet name="first">
             <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-            <title>lEEnkit</title>
+            <title>Lenkit</title>
             <h:outputStylesheet library="css" name="mystyle.css"/>
         </f:facet>
         <script src="http://maps.google.com/maps/api/js?sensor=false"
@@ -19,30 +19,29 @@
     <h:body>      
         <f:view locale="#{localeBean.locale}"/>
 
-        <p:dialog header="Settings" widgetVar="settingsDialog"
+        <p:dialog header="#{txt.settings}" widgetVar="settingsDialog"
                   modal="true" resizable="false"
                   showEffect="fade" hideEffect="fade">
             <h:form enctype="multipart/form-data">
                 #{txt.lang}:
-                <h:selectOneMenu value="#{localeBean.localeCode}">
+                <h:selectOneMenu value="#{localeBean.localeCode}"
+                                 valueChangeListener="#{localeBean.localeCodeChanged}">
                     <f:selectItems value="#{localeBean.languages}"/> 
                 </h:selectOneMenu>
                 <br/>
-                #{txt.lang}:
-                <h:selectOneMenu value="#{localeBean.unitString}">
+                #{txt.units}:
+                <h:selectOneMenu value="#{localeBean.unitString}" 
+                                 valueChangeListener="#{localeBean.unitCodeChanged}">
                     <f:selectItems value="#{localeBean.units}"/> 
                 </h:selectOneMenu>
                 <br/>
-                <p:outputLabel value="property n" />
-                <br/>
 
-                <p:commandButton value="Cancel" onclick="PF('settingsDialog').hide()"/>
-                <p:commandButton value="Save" ajax="false"
-                                 actionListener="#{dataBaseBean.applySettings}"/>
+                <p:commandButton value="#{txt.cancel}" onclick="PF('settingsDialog').hide()"/>
+                <p:commandButton value="#{txt.save}" ajax="false" onclick="submit()"/>
             </h:form>
         </p:dialog> 
 
-        <p:dialog header="Upload new Track" widgetVar="uploadDialog"
+        <p:dialog header="#{txt.add_track}" widgetVar="uploadDialog"
                   modal="true" resizable="false"                  
                   showEffect="fade" hideEffect="fade">
             <h:form enctype="multipart/form-data">
@@ -50,9 +49,9 @@
                                  placeholder="Track description"
                                  value="#{dataBaseBean.description}"/>
                 <br/>
-                <p:fileUpload mode="simple" value="#{dataBaseBean.gpxFile}"/>
-                <p:commandButton value="Cancel" onclick="PF('uploadDialog').hide()"/>
-                <p:commandButton value="Upload" ajax="false"
+                <p:fileUpload mode="simple" value="#{dataBaseBean.gpxFile}" required="true"/>
+                <p:commandButton value="#{txt.cancel}" onclick="PF('uploadDialog').hide()"/>
+                <p:commandButton value="#{txt.upload}" ajax="false"
                                  actionListener="#{dataBaseBean.uploadFile}"/>
                 <p:growl id="uploadmsg" showDetail="true" />
             </h:form>
@@ -63,12 +62,12 @@
             <h:form style="width: 100%; padding: 10px;">
 
                 <p:menuButton value="#{dataBaseBean.user.username}">
-                    <p:menuitem value="Add new Track" icon="ui-icon-plusthick"
+                    <p:menuitem value="#{txt.add_track}" icon="ui-icon-plusthick"
                                 onclick="PF('uploadDialog').show();"/>
-                    <p:menuitem value="Settings" icon="ui-icon-wrench"
+                    <p:menuitem value="#{txt.settings}" icon="ui-icon-wrench"
                                 onclick="PF('settingsDialog').show();" />
                     <p:separator />
-                    <p:menuitem value="Log Out" icon="ui-icon-extlink"
+                    <p:menuitem value="#{txt.logout}" icon="ui-icon-extlink"
                                 action="#{dataBaseBean.logout}" />
                 </p:menuButton> 
 
@@ -96,32 +95,37 @@
         </div>
 
         <h:form id="dform">   
-            <p:panel header="Track information" 
+            <p:panel header="#{txt.track_info}" 
                      style="width: 90%; margin-left: 5%; margin-top: 25px; float: left;">
             <div class="ui-grid ui-grid-responsive" >
+                <div class="ui-grid-row" >                    
+                    <p:chart type="line" style="width: 90%; height: 200px;"
+                             model="#{dataBaseBean.spdModel}"/>
+                </div>
                 <div class="ui-grid-row" >
                     <div class="ui-grid-col-4">
-                        Distance
+                        #{txt.dist}
                         <br/>
+<!--                        <p:outputLabel rendered="#{dataBaseBean.disabled}" value="#{localeBean.metric ? dataBaseBean.track.distance / 1000 : dataBaseBean.track.distance * 0.00062137}"/>-->
                         <p:inputText value="#{dataBaseBean.track.distance}"
                                      disabled="#{dataBaseBean.disabled}"
-                                     size="7" maxlength="6"/>
-                        km
+                                     size="7" maxlength="6" />
+                        #{localeBean.distanceUnit}
                     </div>
                     <div class="ui-grid-col-4">
-                        Duration
+                        #{txt.dur}
                         <br/>
                         <p:inputText value="#{dataBaseBean.track.duration}"
                                      disabled="#{dataBaseBean.disabled}"
                                      size="9" maxlength="8"/>
                     </div>
                     <div class="ui-grid-col-4">
-                        Average Speed
+                        #{txt.avgspd}
                         <br/>
                         <p:inputText value="#{dataBaseBean.track.avgspeed}"
                                      disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6"/>
-                        kmh
+                        #{localeBean.distanceUnit}/h
                     </div>
                 </div>
                 <div class="ui-grid-row">Description</div>
@@ -135,15 +139,15 @@
                         <p:commandButton value="#{dataBaseBean.buttonText}"
                                          actionListener="#{dataBaseBean.editData}"
                                          update="dform"/>
-                        <p:commandButton value="Save" actionListener="#{dataBaseBean.saveData}"
+                        <p:commandButton value="#{txt.save}" actionListener="#{dataBaseBean.saveData}"
                                          update="dform" rendered="#{!dataBaseBean.disabled}"/>
-                        <p:commandButton value="Delete" actionListener="#{dataBaseBean.deleteTrack}"
+                        <p:commandButton value="#{txt.delete}" actionListener="#{dataBaseBean.deleteTrack}"
                                          update="dform,:gmap,:trackform" rendered="#{!dataBaseBean.disabled}">
-                            <p:confirm header="Confirmation" message="Delete track #{dataBaseBean.track.name} ?" icon="ui-icon-alert" />
+                            <p:confirm header="#{txt.confirm}" message="#{txt.del_track} #{dataBaseBean.track.name} ?" icon="ui-icon-alert" />
                         </p:commandButton>
                         <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                            <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
-                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
+                            <p:commandButton value="#{txt.yes}" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check" />
+                            <p:commandButton value="#{txt.no}" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close" />
                         </p:confirmDialog>
                         
                     </div>

@@ -7,7 +7,6 @@ package com.hth.leenkit;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import java.util.Date;
 import javax.enterprise.inject.Model;
 
 /**
@@ -20,7 +19,7 @@ public class TrackPoint {
     private String longitude;
     private double elevation;
     private int speed;
-    private int distance;
+    private long distance;
     private String timestamp;
 
     public TrackPoint() {
@@ -64,11 +63,11 @@ public class TrackPoint {
         this.speed = speed;
     }
 
-    public int getDistance() {
+    public long getDistance() {
         return distance;
     }
 
-    public void setDistance(int distance) {
+    public void setDistance(long distance) {
         this.distance = distance;
     }
 
@@ -87,7 +86,7 @@ public class TrackPoint {
             tp.latitude = (String) obj.get("latitude");
             tp.longitude = (String) obj.get("longitude");
             tp.elevation = (double) obj.get("elevation");
-            tp.distance = (int) obj.get("distance");
+            tp.distance = (long) obj.get("distance");
             tp.speed = (int) obj.get("speed");
             tp.timestamp = (String) obj.get("timestamp");
         }
@@ -111,5 +110,31 @@ public class TrackPoint {
     public String toString() {
         return latitude + ", " + longitude + ", " + elevation + ", " +
                distance + ", " + speed + ", " + timestamp;
+    }
+    
+    /**
+     * Calculate distance between two TrackPoints
+     * @param tp
+     * @return distance in meters
+     */
+    public long distanceTo(TrackPoint tp) {
+        // earth's radius
+        double radius = 6371000;
+        
+        double lat1 = Double.parseDouble(tp.getLatitude());
+        double lat2 = Double.parseDouble(this.getLatitude());
+        double lon1 = Double.parseDouble(tp.getLongitude());
+        double lon2 = Double.parseDouble(this.getLongitude());
+        
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        lat1 = Math.toRadians(lat1);
+        lat2 = Math.toRadians(lat2);
+ 
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) 
+                   * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+        double c = 2 * Math.asin(Math.sqrt(a));
+        
+        return (long) (Math.round(radius * c));
     }
 }

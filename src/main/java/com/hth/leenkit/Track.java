@@ -26,6 +26,7 @@ public class Track {
     private String distance;
     private String duration;
     private String avgspeed;
+    private String maxspeed;
     private Date timestamp;
     private List<TrackPoint> trackpoints;
     
@@ -89,6 +90,14 @@ public class Track {
         this.avgspeed = avgspeed;
     }
 
+    public String getMaxspeed() {
+        return maxspeed;
+    }
+
+    public void setMaxspeed(String maxspeed) {
+        this.maxspeed = maxspeed;
+    }
+
     public Date getTimestamp() {
         return timestamp;
     }
@@ -125,6 +134,7 @@ public class Track {
             t.distance = (String) obj.get("distance");
             t.duration = (String) obj.get("duration");
             t.avgspeed = (String) obj.get("avgspeed");
+            t.maxspeed = (String) obj.get("maxspeed");
             t.timestamp = (Date) obj.get("timestamp");
 
             List<BasicDBObject> list = (List<BasicDBObject>) obj.get("trackpoints");  
@@ -148,6 +158,7 @@ public class Track {
         obj.put("distance", distance);
         obj.put("duration", duration);
         obj.put("avgspeed", avgspeed);
+        obj.put("maxspeed", maxspeed);
         obj.put("timestamp", timestamp);
 
         List<BasicDBObject> points = new ArrayList();   
@@ -169,6 +180,7 @@ public class Track {
         t.distance = this.distance;
         t.duration = this.duration;
         t.avgspeed = this.avgspeed;
+        t.maxspeed = this.maxspeed;
         t.timestamp = this.timestamp;
         t.trackpoints = this.trackpoints;
             
@@ -178,6 +190,6 @@ public class Track {
     @Override
     public String toString() {
         return id == null ? "null" : id.toString() + ", " + name + ", " + owner + ", " + description + ", " + distance + ", " + 
-               duration + ", " + avgspeed + ", " + timestamp  + ", " + trackpoints;
+               duration + ", " + avgspeed + ", " + maxspeed + ", " +timestamp  + ", " + trackpoints;
     }
 }

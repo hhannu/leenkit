@@ -9,12 +9,11 @@
         <h:outputStylesheet library="css" name="mystyle.css"/>
     </h:head>
     <h:body>
-        <f:view locale="#{localeBean.locale}"/>
+        <f:view locale="#{dataBaseBean.locale}"/>
         
         <h:form style="float: right;"> 
-            <h:selectOneMenu value="#{localeBean.localeCode}" onchange="submit()"
-                             valueChangeListener="#{localeBean.localeCodeChanged}">
-                <f:selectItems value="#{localeBean.languages}"/> 
+            <h:selectOneMenu value="#{dataBaseBean.language}" onchange="submit()">
+                <f:selectItems value="#{dataBaseBean.availableLanguages}"/> 
             </h:selectOneMenu>
         </h:form> 
         <br/>

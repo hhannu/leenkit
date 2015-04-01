@@ -17,7 +17,10 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,7 +70,17 @@ public class DataBaseBean {
     private String oldPassword;
     private String newPassword;
 
-    ResourceBundle messages = ResourceBundle.getBundle("locale");
+    ResourceBundle messages;    
+    
+    private Locale locale;
+
+    private static final Map<String, String> availableLanguages;
+
+    static {
+        availableLanguages = new LinkedHashMap<>();
+        availableLanguages.put("English", "en");
+        availableLanguages.put("Finnish", "fi");
+    }
     
     /**
      * Constructor
@@ -82,7 +95,7 @@ public class DataBaseBean {
         
         try {
             if(mongo_pw != null){    
-                MongoCredential credential = MongoCredential.createMongoCRCredential(mongo_un, "leenkit", mongo_pw.toCharArray());
+                MongoCredential credential = MongoCredential.createMongoCRCredential(mongo_un, "lenkit", mongo_pw.toCharArray());
                 mc = new MongoClient(new ServerAddress(mongo_host, Integer.parseInt(mongo_port)), Arrays.asList(credential));
             }
             else
@@ -91,7 +104,7 @@ public class DataBaseBean {
             Logger.getLogger(DataBaseBean.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        DB db = mc.getDB("leenkit");
+        DB db = mc.getDB("lenkit");
         
         users = db.getCollection("users");
         if (users == null) {
@@ -102,6 +115,10 @@ public class DataBaseBean {
         if (tracks == null) {
             tracks = db.createCollection("tracks", null);
         }
+        
+        //locale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
+        locale = Locale.ENGLISH;
+        messages = ResourceBundle.getBundle("locale", locale);
         
         user = new User();
         track = null;
@@ -239,6 +256,23 @@ public class DataBaseBean {
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
+    
+    public Map<String, String> getAvailableLanguages() {
+        return availableLanguages;
+    }
+
+    public Locale getLocale() {
+        return locale;
+    }
+        
+    public String getLanguage() {
+        return locale.getLanguage();
+    }
+
+    public void setLanguage(String language) {
+        locale = new Locale(language);
+        FacesContext.getCurrentInstance().getViewRoot().setLocale(locale);
+    }
         
     public Track getTrack() {
         return track;
@@ -337,8 +371,13 @@ public class DataBaseBean {
         
         FacesContext context = FacesContext.getCurrentInstance(); 
         
-        if(tmp != null ){ // && BCrypt.checkpw(user.getPassword(), tmp.getPassword())){
+        if(tmp != null && BCrypt.checkpw(user.getPassword(), tmp.getPassword())){
             user = tmp;
+            if(!user.getLanguage().equals(""))
+                locale = new Locale(user.getLanguage());
+            FacesContext.getCurrentInstance().getViewRoot().setLocale(locale);
+            messages = ResourceBundle.getBundle("locale", locale);
+            buttonText = messages.getString("edit");
             findTracks();
             mapCenter = user.getLocationCoords();
             //System.out.println("Correct username & password");
@@ -382,6 +421,7 @@ public class DataBaseBean {
             user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(13)));
             //System.out.println("Adding username to database");   
             user.setLocation("oulu,fi");
+            user.setLanguage(getLanguage());
             mapCenter = "65.0126144,25.4714526";
             addUser(user);
             context.getExternalContext().getSessionMap().put("username", user.getUsername());
@@ -423,15 +463,15 @@ public class DataBaseBean {
         if(track == null)
             return;
         
-        if(this.disabled){
+        if(disabled){
             tmpTrack = track.copy();
-            this.buttonText = messages.getString("cancel");
-            this.disabled = false;
+            buttonText = messages.getString("cancel");
+            disabled = false;
         }
         else {
             track = tmpTrack;
-            this.buttonText = messages.getString("edit");
-            this.disabled = true;
+            buttonText = messages.getString("edit");
+            disabled = true;
         }
     }
     
@@ -504,8 +544,14 @@ public class DataBaseBean {
         createLineModel();
     }
     
-    public void applySettings(String language) {
-        user.setLanguage(language);
+    public void applySettings() {
+        
+        user.setLanguage(getLanguage());
+        messages = ResourceBundle.getBundle("locale", locale);
+        if(disabled)
+            buttonText = messages.getString("edit");
+        else
+            buttonText = messages.getString("cancel");
         saveUser(user);
         if(track == null)
             mapCenter = user.getLocationCoords();
@@ -525,8 +571,8 @@ public class DataBaseBean {
         Axis xAxis = spdModel.getAxis(AxisType.X);
         yAxis.setMin(0);
         xAxis.setMin(0);
-        yAxis.setLabel(messages.getString("spd"));
-        xAxis.setLabel(messages.getString("dist"));
+        yAxis.setLabel("km/h");
+        xAxis.setLabel("m");
         if(track != null) { 
             spdModel.setZoom(true);   
             spdModel.setTitle(track.getName());

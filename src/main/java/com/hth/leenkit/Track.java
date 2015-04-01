@@ -228,6 +228,7 @@ public class Track {
 
         long d = 0;
         long distance = 0;
+        double speed = 0;
         double maxspeed = 0;
 
         // create list of TrackPoint objects
@@ -259,11 +260,11 @@ public class Track {
                     Instant.parse(points.get(points.size() - 1).getTimestamp()).getEpochSecond();
                 long dist = trkpt.distanceTo(points.get(points.size() - 1));
                 distance += dist;
-                double speed = 0;
-                if(d != 0) 
-                    speed = (int) (dist / d);
-                if(speed > maxspeed)
-                    maxspeed = speed;
+                if(d != 0 && dist != 0) {
+                    speed = dist / d;
+                    if(speed > maxspeed)
+                        maxspeed = speed;
+                }
                 trkpt.setSpeed(speed);
                 trkpt.setDistance(distance);
             }

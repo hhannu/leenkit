@@ -17,7 +17,7 @@
     </h:head>
 
     <h:body>      
-        <f:view locale="#{localeBean.locale}"/>
+        <f:view locale="#{dataBaseBean.locale}"/>
 
         <div style="width: 480px; height: 480px; float: left; margin-left: 5%;">
             <h:form style="width: 100%; padding: 10px;">
@@ -40,7 +40,8 @@
             </h:form> 
             
             <h:form id="trackform">  
-                <p:dataList var="trk" value="#{dataBaseBean.tracklist}" type="definition"
+                <p:dataList var="trk" value="#{dataBaseBean.tracklist}"
+                            type="unordered" itemType="none"
                             style="width:480px; float: left;">
                     <f:facet name="header">#{txt.track_header}</f:facet>  
                     <p:commandButton value="#{trk.name}" ajax="false">
@@ -70,6 +71,7 @@
                                      rendered="#{dataBaseBean.track != null}"
                                      style="width: 25px; height: 25px;"/>
                 </div>
+                <p:separator/>
                 <div class="ui-grid-row" >
                     <div class="ui-grid-col-4">
                         #{txt.dist}
@@ -77,7 +79,7 @@
                         <p:inputText value="#{dataBaseBean.track.distance}"
                                      disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6" />
-                        #{localeBean.distanceUnit}
+                        km
                     </div>
                     <div class="ui-grid-col-4">
                         #{txt.dur}
@@ -92,7 +94,7 @@
                         <p:inputText value="#{dataBaseBean.track.avgspeed}"
                                      disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6"/>
-                        #{localeBean.distanceUnit}/h
+                        km/h
                     </div>
                 </div>
                 <div class="ui-grid-row">#{txt.desc}</div>
@@ -118,7 +120,8 @@
                         </p:confirmDialog>
                         
                     </div>
-                </div>
+                </div>                
+                <div class="ui-grid-row" ></div>
             </div> 
             </p:panel>
         </h:form> 
@@ -128,9 +131,8 @@
                   showEffect="fade" hideEffect="fade">
             <h:form enctype="multipart/form-data">
                 #{txt.lang}:
-                <h:selectOneMenu value="#{localeBean.localeCode}"
-                                 valueChangeListener="#{localeBean.localeCodeChanged}">
-                    <f:selectItems value="#{localeBean.languages}"/> 
+                <h:selectOneMenu value="#{dataBaseBean.language}">
+                    <f:selectItems value="#{dataBaseBean.availableLanguages}"/> 
                 </h:selectOneMenu>
                 <br/>
                 #{txt.location}:
@@ -140,7 +142,7 @@
 
                 <p:commandButton value="#{txt.cancel}" onclick="PF('settingsDialog').hide()"/>
                 <p:commandButton value="#{txt.save}" ajax="false"
-                                 action="#{dataBaseBean.applySettings(localeBean.localeCode)}"
+                                 action="#{dataBaseBean.applySettings}"
                                  onclick="submit()"/>
             </h:form>
         </p:dialog> 

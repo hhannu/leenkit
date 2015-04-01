@@ -7,11 +7,23 @@ package com.hth.leenkit;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.enterprise.inject.Model;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.bson.types.ObjectId;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -191,5 +203,97 @@ public class Track {
     public String toString() {
         return id == null ? "null" : id.toString() + ", " + name + ", " + owner + ", " + description + ", " + distance + ", " + 
                duration + ", " + avgspeed + ", " + maxspeed + ", " +timestamp  + ", " + trackpoints;
+    }
+    
+    public static Track createFromInputStream(InputStream is) {
+        Track newTrack = null;
+        
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder;
+        Document doc;
+
+        // parse xml document from inputstream
+        try {
+            dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(is);
+        } catch (ParserConfigurationException | IOException | SAXException ex) {
+            Logger.getLogger(Track.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        doc.getDocumentElement().normalize();
+
+        // get all trackpoints from xml document
+        NodeList trackpoints = doc.getElementsByTagName("trkpt");
+        List<TrackPoint> points = new ArrayList();
+
+        long d = 0;
+        long distance = 0;
+        double maxspeed = 0;
+
+        // create list of TrackPoint objects
+        for(int i = 0; i < trackpoints.getLength(); i++) {
+            Node point = trackpoints.item(i);
+            TrackPoint trkpt =  new TrackPoint();
+            // get latitude & longitude
+            trkpt.setLatitude(point.getAttributes().getNamedItem("lat").getNodeValue());
+            trkpt.setLongitude(point.getAttributes().getNamedItem("lon").getNodeValue());
+
+            // get other parameters
+            NodeList nlist = point.getChildNodes();
+            for(int j = 0; j < nlist.getLength(); j++) {
+                String nodeName = nlist.item(j).getNodeName();
+                // add only elevation and time
+                if(nodeName.equals("ele"))
+                    trkpt.setElevation(Float.parseFloat(nlist.item(j).getTextContent()));
+                if(nodeName.equals("time")){
+                    trkpt.setTimestamp(nlist.item(j).getTextContent());                        
+                }
+            }
+
+            if(i == 0) {
+                trkpt.setSpeed(0);
+                trkpt.setDistance(0);
+            }
+            else {                
+                d = Instant.parse(trkpt.getTimestamp()).getEpochSecond() -
+                    Instant.parse(points.get(points.size() - 1).getTimestamp()).getEpochSecond();
+                long dist = trkpt.distanceTo(points.get(points.size() - 1));
+                distance += dist;
+                double speed = 0;
+                if(d != 0) 
+                    speed = (int) (dist / d);
+                if(speed > maxspeed)
+                    maxspeed = speed;
+                trkpt.setSpeed(speed);
+                trkpt.setDistance(distance);
+            }
+            points.add(trkpt);
+        }
+
+        //System.out.println(points);
+
+        // Create new Track object
+        newTrack = new Track();
+        // name
+        String name = doc.getElementsByTagName("name").item(0).getTextContent();
+        if(name == null)
+            name = points.get(0).getTimestamp();
+        newTrack.setName(name);
+        // distance
+        newTrack.setDistance(String.format("%.3f%n", (double)distance / 1000));
+        // maxspeed
+        newTrack.setMaxspeed(String.format("%.1f%n", maxspeed * 3.6));
+        // duration
+        long seconds = Instant.parse(points.get(points.size() - 1).getTimestamp()).getEpochSecond() -
+                    Instant.parse(points.get(0).getTimestamp()).getEpochSecond();
+        newTrack.setDuration(String.format("%02d:%02d:%02d",
+                seconds / 3600,
+                (seconds % 3600) / 60,
+                seconds % 60));
+        // average speed
+        newTrack.setAvgspeed(String.format("%.1f%n", ((double)distance / (double)seconds) * 3.6));
+        newTrack.setTrackpoints(points);
+            System.out.println(points.get(points.size() - 1).getDistance());
+        return newTrack;
     }
 }

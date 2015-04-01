@@ -15,10 +15,6 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,14 +26,10 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpSession;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.primefaces.model.UploadedFile;
 import org.primefaces.model.chart.Axis;
 import org.primefaces.model.chart.AxisType;
-import org.primefaces.model.chart.CartesianChartModel;
 import org.primefaces.model.chart.LineChartModel;
 import org.primefaces.model.chart.LineChartSeries;
 import org.primefaces.model.map.DefaultMapModel;
@@ -45,10 +37,6 @@ import org.primefaces.model.map.LatLng;
 import org.primefaces.model.map.MapModel;
 import org.primefaces.model.map.Marker;
 import org.primefaces.model.map.Polyline;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  *
@@ -75,6 +63,9 @@ public class DataBaseBean {
     private MapModel polylineModel;
     private LineChartModel spdModel;
     private LineChartSeries series;
+    
+    private String oldPassword;
+    private String newPassword;
 
     ResourceBundle messages = ResourceBundle.getBundle("locale");
     
@@ -116,7 +107,7 @@ public class DataBaseBean {
         track = null;
         tracklist = new ArrayList();     
         
-        mapCenter = "65.0126144,25.4714526";
+        mapCenter = user.getLocationCoords();
         
         polyline = new Polyline();
         polyline.setStrokeWeight(2);
@@ -136,40 +127,6 @@ public class DataBaseBean {
     /**
      *  Getters and setters 
      */
-
-    public Track getTrack() {
-        return track;
-    }
-
-    public void setTrack(Track track) {
-        //System.out.println("setTrack() " + track);      
-        this.track = track;
-        
-        List<LatLng> path = new ArrayList();
-        List<TrackPoint> points = track.getTrackpoints();
-
-        series = new LineChartSeries();
-        series.setShowMarker(false);
-        
-        for(int i = 0; i < points.size(); i++){
-            TrackPoint p = points.get(i);
-            path.add(new LatLng(Double.parseDouble((String) p.getLatitude()),
-                    Double.parseDouble((String) p.getLongitude())));            
-            series.set(p.getDistance(), p.getSpeed() * 3.6);
-                          
-        }        
-        polyline.setPaths(path);
-        
-        polylineModel = new DefaultMapModel();        
-        polylineModel.addOverlay(polyline);
-        if(!path.isEmpty()){
-            mapCenter = path.get(0).getLat() + "," + path.get(0).getLng();
-            polylineModel.addOverlay(new Marker(path.get(0), "Start"));
-            polylineModel.addOverlay(new Marker(path.get(path.size() - 1), "Stop"));
-        }
-        
-        createLineModel();
-    }
 
     public User getUser() {
         return user;
@@ -266,6 +223,56 @@ public class DataBaseBean {
     public void setSpdModel(LineChartModel spdModel) {
         this.spdModel = spdModel;
     }    
+
+    public String getOldPassword() {
+        return oldPassword;
+    }
+
+    public void setOldPassword(String oldPassword) {
+        this.oldPassword = oldPassword;
+    }
+
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
+    }
+        
+    public Track getTrack() {
+        return track;
+    }
+
+    public void setTrack(Track track) {
+        //System.out.println("setTrack() " + track);      
+        this.track = track;
+        
+        List<LatLng> path = new ArrayList();
+        List<TrackPoint> points = track.getTrackpoints();
+
+        series = new LineChartSeries();
+        series.setShowMarker(false);
+        
+        for(int i = 0; i < points.size(); i++){
+            TrackPoint p = points.get(i);
+            path.add(new LatLng(Double.parseDouble((String) p.getLatitude()),
+                    Double.parseDouble((String) p.getLongitude())));            
+            series.set(p.getDistance(), p.getSpeed() * 3.6);
+                          
+        }        
+        polyline.setPaths(path);
+        
+        polylineModel = new DefaultMapModel();        
+        polylineModel.addOverlay(polyline);
+        if(!path.isEmpty()){
+            mapCenter = path.get(0).getLat() + "," + path.get(0).getLng();
+            polylineModel.addOverlay(new Marker(path.get(0), "Start"));
+            polylineModel.addOverlay(new Marker(path.get(path.size() - 1), "Stop"));
+        }
+        
+        createLineModel();
+    }
     
     /**
      * Add user to database.
@@ -273,6 +280,14 @@ public class DataBaseBean {
      */
     public void addUser(User u) {
         users.insert(u.toDBObject());
+    }
+    
+    /**
+     * Save user to database.
+     * @param u 
+     */
+    public void saveUser(User u) {
+        users.save(u.toDBObject());
     }
     
     /**
@@ -325,13 +340,15 @@ public class DataBaseBean {
         if(tmp != null ){ // && BCrypt.checkpw(user.getPassword(), tmp.getPassword())){
             user = tmp;
             findTracks();
+            mapCenter = user.getLocationCoords();
             //System.out.println("Correct username & password");
             context.getExternalContext().getSessionMap().put("username", user.getUsername());
             return "content";        
         }
         else {        
             //System.out.println("Wrong username and/or password");
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",  "Wrong username or password"));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    messages.getString("error"),  messages.getString("invalid_unpw")));
             return null;
         }
     }
@@ -363,7 +380,9 @@ public class DataBaseBean {
         
         if(findUser(user.getUsername()) == null){     
             user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(13)));
-            //System.out.println("Adding username to database");       
+            //System.out.println("Adding username to database");   
+            user.setLocation("oulu,fi");
+            mapCenter = "65.0126144,25.4714526";
             addUser(user);
             context.getExternalContext().getSessionMap().put("username", user.getUsername());
             
@@ -371,7 +390,8 @@ public class DataBaseBean {
         }
         else {        
             //System.out.println("Username already exists");
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error",  "Username already exists"));
+            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                    messages.getString("error"),  messages.getString("user_exists")));
             return null;   
         }
     }
@@ -424,8 +444,7 @@ public class DataBaseBean {
         
         if(track != null) {
             saveTrack(track);
-        }
-        
+        }        
     }   
     
     /**
@@ -435,129 +454,61 @@ public class DataBaseBean {
     public void uploadFile() {
         if(gpxFile != null) {
             
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder;
-            Document doc;
+            Track newTrack = null;
             
             try {
-                dBuilder = dbFactory.newDocumentBuilder();
-                doc = dBuilder.parse(gpxFile.getInputstream());
-            } catch (ParserConfigurationException | IOException | SAXException ex) {
+                newTrack = Track.createFromInputStream(gpxFile.getInputstream());
+            } catch (IOException ex) {
                 Logger.getLogger(DataBaseBean.class.getName()).log(Level.SEVERE, null, ex);
-                FacesMessage message = new FacesMessage("Error", ex.getLocalizedMessage());
+            }
+            
+            if(newTrack != null){
+                newTrack.setOwner(user.getUsername());
+                newTrack.setDescription(description);
+                saveTrack(newTrack);
+                findTracks();
+
+                FacesMessage message = new FacesMessage();
+                message.setSummary(messages.getString("upload_file"));
+                message.setDetail(gpxFile.getFileName());
                 FacesContext.getCurrentInstance().addMessage(null, message);
-                return;
+
+                System.out.println("Uploaded file: " + gpxFile.getFileName() + 
+                                   " (" + gpxFile.getContentType() + ")");       
+                //System.out.println(newTrack + "\n");
             }
-            doc.getDocumentElement().normalize();
-            
-            NodeList trackpoints = doc.getElementsByTagName("trkpt");
-            List<TrackPoint> points = new ArrayList();
-            Instant time_prev, time_now = null;
-            long d = 0;
-            long distance = 0;
-            int maxspeed = 0;
-        
-            for(int i = 0; i < trackpoints.getLength(); i++) {
-                Node point = trackpoints.item(i);
-                TrackPoint trkpt =  new TrackPoint();
-                // get latitude & longitude
-                trkpt.setLatitude(point.getAttributes().getNamedItem("lat").getNodeValue());
-                trkpt.setLongitude(point.getAttributes().getNamedItem("lon").getNodeValue());
-                
-                // get other parameters
-                NodeList nlist = point.getChildNodes();
-                for(int j = 0; j < nlist.getLength(); j++) {
-                    String nodeName = nlist.item(j).getNodeName();
-                    // add only elevation and time
-                    if(nodeName.equals("ele"))
-                        trkpt.setElevation(Float.parseFloat(nlist.item(j).getTextContent()));
-                    if(nodeName.equals("time")){
-                        trkpt.setTimestamp(nlist.item(j).getTextContent());                        
-                    }
-                }
-                time_prev = time_now;
-                time_now = Instant.parse(trkpt.getTimestamp());
-                if(i == 0) {
-                    trkpt.setSpeed(0);
-                    trkpt.setDistance(0);
-                }
-                else {
-                    //d = time_now.getEpochSecond() - time_prev.getEpochSecond();
-                    d = Instant.parse(trkpt.getTimestamp()).getEpochSecond() -
-                        Instant.parse(points.get(i - 1).getTimestamp()).getEpochSecond();
-                    long dist = trkpt.distanceTo(points.get(i - 1));
-                    distance += dist;
-                    int speed = 0;
-                    if(d != 0)
-                        speed = (int) (dist / d);
-                    if(speed > maxspeed)
-                        maxspeed = speed;
-                    trkpt.setSpeed(speed);
-                    trkpt.setDistance(distance);
-                }
-                points.add(trkpt);
+            else {                
+                FacesMessage message = new FacesMessage();
+                message.setSummary(messages.getString("upload_file_fail"));
+                message.setDetail(gpxFile.getFileName());
+                FacesContext.getCurrentInstance().addMessage(null, message);
             }
-            
-            //System.out.println(points);
-            
-            // Create new track object
-            Track newTrack = new Track();
-            newTrack.setOwner(user.getUsername());
-            newTrack.setDescription(description);
-            // track name
-            String name = doc.getElementsByTagName("name").item(0).getTextContent();
-            if(name == null)
-                name = points.get(0).getTimestamp();
-            newTrack.setName(name);
-            // distance
-            newTrack.setDistance(String.valueOf(distance / 1000));
-            // maxspeed
-            newTrack.setMaxspeed(String.valueOf(maxspeed));
-            // duration
-            long seconds = Instant.parse(points.get(points.size() - 1).getTimestamp()).getEpochSecond() -
-                        Instant.parse(points.get(0).getTimestamp()).getEpochSecond();
-            newTrack.setDuration(String.format("%02d:%02d:%02d",
-                    seconds / 3600,
-                    (seconds % 3600) / 60,
-                    seconds % 60));
-            // average speed
-            newTrack.setAvgspeed(String.format("%.2f%n", ((double)distance / (double)seconds) * 3.6));
-            newTrack.setTrackpoints(points);
-            
-            saveTrack(newTrack);
-            findTracks();
-            
-            FacesMessage message = new FacesMessage("Success", "Uploaded file: " + gpxFile.getFileName());
-            FacesContext.getCurrentInstance().addMessage(null, message);
-            
-            System.out.println("Uploaded file: " + gpxFile.getFileName() + 
-                               " (" + gpxFile.getContentType() + ")");
-            System.out.println("Description: " + description);            
-            //System.out.println(newTrack + "\n");
             
             gpxFile = null;
             description = "";
-        }
-        
+        }        
     }
     
     /**
      * Delete selected track from database.
      */
     public void deleteTrack() {
-        System.out.println("deleteTrack() " + track);
+        //System.out.println("deleteTrack() " + track);
         tracks.remove(new BasicDBObject("_id", track.getId()));       
         polylineModel = new DefaultMapModel(); 
         editData();
         track = null; 
-        mapCenter = "65.0126144,25.4714526";
+        mapCenter = user.getLocationCoords();
         findTracks(); 
         initLineModel();
         createLineModel();
     }
     
-    public void applySettings() {
-    
+    public void applySettings(String language) {
+        user.setLanguage(language);
+        saveUser(user);
+        if(track == null)
+            mapCenter = user.getLocationCoords();
     }
     
     private void initLineModel() {
@@ -569,22 +520,46 @@ public class DataBaseBean {
         spdModel = new LineChartModel();
  
         spdModel.addSeries(series);
-        spdModel.setAnimate(true);        
+        spdModel.setAnimate(true);      
         Axis yAxis = spdModel.getAxis(AxisType.Y);
         Axis xAxis = spdModel.getAxis(AxisType.X);
         yAxis.setMin(0);
         xAxis.setMin(0);
-        yAxis.setLabel("Speed");
-        xAxis.setLabel("Distance");
-        if(track != null) {
+        yAxis.setLabel(messages.getString("spd"));
+        xAxis.setLabel(messages.getString("dist"));
+        if(track != null) { 
+            spdModel.setZoom(true);   
             spdModel.setTitle(track.getName());
-            yAxis.setMax(Double.parseDouble(track.getMaxspeed()) * 3.6);
-            xAxis.setMax(track.getDistance());
+            yAxis.setMax(Double.parseDouble(track.getMaxspeed()));
+            xAxis.setMax((long)(Double.parseDouble(track.getDistance()) * 1000));
         }
         else {
-            spdModel.setTitle("");
+            spdModel.setZoom(false);
+            spdModel.setTitle(" ");
             yAxis.setMax(10);            
+        }        
+    }
+    
+    public void changePassword(Boolean change) {
+        
+        FacesMessage message = new FacesMessage();
+        
+        if(change) {
+            if(BCrypt.checkpw(oldPassword, user.getPassword())) {
+                user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt(13)));
+                saveUser(user);
+                message.setSummary(messages.getString("pw_changed"));
+                message.setDetail("");
+            }
+            else {            
+                message.setSeverity(FacesMessage.SEVERITY_WARN);
+                message.setSummary(messages.getString("pw_notchanged"));
+                message.setDetail(messages.getString("wrong_pw"));
+            }
+            FacesContext.getCurrentInstance().addMessage(null, message);
         }
         
+        this.oldPassword = "";
+        this.newPassword = "";
     }
 }

@@ -48,3 +48,7 @@ body{
     text-align: center;
 }
 
+.ui-datalist-data {
+   height: 360px;
+   overflow: auto;
+}

@@ -18,7 +18,7 @@ public class TrackPoint {
     private String latitude;
     private String longitude;
     private double elevation;
-    private int speed;
+    private double speed;
     private long distance;
     private String timestamp;
 
@@ -55,11 +55,11 @@ public class TrackPoint {
         this.elevation = elevation;
     }
 
-    public int getSpeed() {
+    public double getSpeed() {
         return speed;
     }
 
-    public void setSpeed(int speed) {
+    public void setSpeed(double speed) {
         this.speed = speed;
     }
 
@@ -87,7 +87,7 @@ public class TrackPoint {
             tp.longitude = (String) obj.get("longitude");
             tp.elevation = (double) obj.get("elevation");
             tp.distance = (long) obj.get("distance");
-            tp.speed = (int) obj.get("speed");
+            tp.speed = (double) obj.get("speed");
             tp.timestamp = (String) obj.get("timestamp");
         }
         return tp;

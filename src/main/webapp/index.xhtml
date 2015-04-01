@@ -19,45 +19,6 @@
     <h:body>      
         <f:view locale="#{localeBean.locale}"/>
 
-        <p:dialog header="#{txt.settings}" widgetVar="settingsDialog"
-                  modal="true" resizable="false"
-                  showEffect="fade" hideEffect="fade">
-            <h:form enctype="multipart/form-data">
-                #{txt.lang}:
-                <h:selectOneMenu value="#{localeBean.localeCode}"
-                                 valueChangeListener="#{localeBean.localeCodeChanged}">
-                    <f:selectItems value="#{localeBean.languages}"/> 
-                </h:selectOneMenu>
-                <br/>
-                #{txt.units}:
-                <h:selectOneMenu value="#{localeBean.unitString}" 
-                                 valueChangeListener="#{localeBean.unitCodeChanged}">
-                    <f:selectItems value="#{localeBean.units}"/> 
-                </h:selectOneMenu>
-                <br/>
-
-                <p:commandButton value="#{txt.cancel}" onclick="PF('settingsDialog').hide()"/>
-                <p:commandButton value="#{txt.save}" ajax="false" onclick="submit()"/>
-            </h:form>
-        </p:dialog> 
-
-        <p:dialog header="#{txt.add_track}" widgetVar="uploadDialog"
-                  modal="true" resizable="false"                  
-                  showEffect="fade" hideEffect="fade">
-            <h:form enctype="multipart/form-data">
-                <p:inputTextarea rows="4" cols="35" title="Track description"
-                                 placeholder="Track description"
-                                 value="#{dataBaseBean.description}"/>
-                <br/>
-                <p:fileUpload mode="simple" value="#{dataBaseBean.gpxFile}" required="true"/>
-                <p:commandButton value="#{txt.cancel}" onclick="PF('uploadDialog').hide()"/>
-                <p:commandButton value="#{txt.upload}" ajax="false"
-                                 actionListener="#{dataBaseBean.uploadFile}"/>
-                <p:growl id="uploadmsg" showDetail="true" />
-            </h:form>
-        </p:dialog> 
-
-
         <div style="width: 480px; height: 480px; float: left; margin-left: 5%;">
             <h:form style="width: 100%; padding: 10px;">
 
@@ -66,6 +27,8 @@
                                 onclick="PF('uploadDialog').show();"/>
                     <p:menuitem value="#{txt.settings}" icon="ui-icon-wrench"
                                 onclick="PF('settingsDialog').show();" />
+                    <p:menuitem value="#{txt.change_pw}" icon="ui-icon-key"
+                                onclick="PF('pwDialog').show();" />
                     <p:separator />
                     <p:menuitem value="#{txt.logout}" icon="ui-icon-extlink"
                                 action="#{dataBaseBean.logout}" />
@@ -86,6 +49,7 @@
                     </p:commandButton>
                 </p:dataList> 
             </h:form>
+            <br/>
         </div>
         
         <div id="mapcontainer">
@@ -99,14 +63,17 @@
                      style="width: 90%; margin-left: 5%; margin-top: 25px; float: left;">
             <div class="ui-grid ui-grid-responsive" >
                 <div class="ui-grid-row" >                    
-                    <p:chart type="line" style="width: 90%; height: 200px;"
+                    <p:chart widgetVar="chart" type="line" style="width: 95%; height: 250px;"
                              model="#{dataBaseBean.spdModel}"/>
+                    <p:commandButton type="button" icon="ui-icon-zoomout"
+                                     onclick="PF('chart').resetZoom()"
+                                     rendered="#{dataBaseBean.track != null}"
+                                     style="width: 25px; height: 25px;"/>
                 </div>
                 <div class="ui-grid-row" >
                     <div class="ui-grid-col-4">
                         #{txt.dist}
                         <br/>
-<!--                        <p:outputLabel rendered="#{dataBaseBean.disabled}" value="#{localeBean.metric ? dataBaseBean.track.distance / 1000 : dataBaseBean.track.distance * 0.00062137}"/>-->
                         <p:inputText value="#{dataBaseBean.track.distance}"
                                      disabled="#{dataBaseBean.disabled}"
                                      size="7" maxlength="6" />
@@ -128,7 +95,7 @@
                         #{localeBean.distanceUnit}/h
                     </div>
                 </div>
-                <div class="ui-grid-row">Description</div>
+                <div class="ui-grid-row">#{txt.desc}</div>
                 <div class="ui-grid-row">
                     <div class="ui-grid-col-8">
                         <p:inputText value="#{dataBaseBean.track.description}"
@@ -155,7 +122,75 @@
             </div> 
             </p:panel>
         </h:form> 
-        <p:separator/>
+        
+        <p:dialog header="#{txt.settings}" widgetVar="settingsDialog"
+                  modal="true" resizable="false"
+                  showEffect="fade" hideEffect="fade">
+            <h:form enctype="multipart/form-data">
+                #{txt.lang}:
+                <h:selectOneMenu value="#{localeBean.localeCode}"
+                                 valueChangeListener="#{localeBean.localeCodeChanged}">
+                    <f:selectItems value="#{localeBean.languages}"/> 
+                </h:selectOneMenu>
+                <br/>
+                #{txt.location}:
+                <p:inputText id="location" type="text" 
+                             value="#{dataBaseBean.user.location}"/>
+                <br/>
+
+                <p:commandButton value="#{txt.cancel}" onclick="PF('settingsDialog').hide()"/>
+                <p:commandButton value="#{txt.save}" ajax="false"
+                                 action="#{dataBaseBean.applySettings(localeBean.localeCode)}"
+                                 onclick="submit()"/>
+            </h:form>
+        </p:dialog> 
+
+        <p:dialog header="#{txt.add_track}" widgetVar="uploadDialog"
+                  modal="true" resizable="false"                  
+                  showEffect="fade" hideEffect="fade">
+            <h:form enctype="multipart/form-data">
+                <p:inputTextarea rows="4" cols="35" title="Track description"
+                                 placeholder="#{txt.track_desc}"
+                                 value="#{dataBaseBean.description}"/>
+                <br/>
+                <p:fileUpload mode="simple" value="#{dataBaseBean.gpxFile}" required="true"/>
+                <p:commandButton value="#{txt.cancel}" onclick="PF('uploadDialog').hide()"/>
+                <p:commandButton value="#{txt.upload}" ajax="false"
+                                 actionListener="#{dataBaseBean.uploadFile}"/>
+                <p:growl id="uploadmsg" showDetail="true" />
+            </h:form>
+        </p:dialog> 
+        
+        <p:dialog header="#{txt.change_pw}" widgetVar="pwDialog"
+                  modal="true" resizable="false"
+                  showEffect="fade" hideEffect="fade">
+            <h:form id="pwform">                
+                <p:inputText id="pw" type="password" placeholder="#{txt.oldpw}"
+                             value="#{dataBaseBean.oldPassword}" required="true"/>
+                <p:message for="pw"/>
+                
+                <p:password id="pw1" label="#{txt.password}" placeholder="#{txt.newpw}"
+                            match="pw2" feedback="true" inline="true" required="true"
+                            value="#{dataBaseBean.newPassword}">
+                    <f:validateLength minimum="6"/>
+                </p:password>     
+                <p:message for="pw1"/>
+                
+                <p:password id="pw2" label="#{txt.pw_confirm}" placeholder="#{txt.pw_confirm}"
+                            feedback="true" inline="true" required="true">
+                    <f:validateLength minimum="6"/>
+                </p:password>     
+                <p:message for="pw2"/>
+                <br/>
+
+                <p:commandButton value="#{txt.cancel}" action="#{dataBaseBean.changePassword(false)}"
+                                 onclick="PF('pwDialog').hide()"/>
+                <p:commandButton value="#{txt.save}" action="#{dataBaseBean.changePassword(true)}"
+                                 onclick="PF('pwDialog').hide()" update="pwform,pwmsg"/>
+                <p:growl id="pwmsg" showDetail="true" />
+            </h:form>
+        </p:dialog>
+        
     </h:body>
 </html>
 
